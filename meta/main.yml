@@ -1,0 +1,6 @@
+galaxy_info:
+  author: Sergey Ovsienko so@unicanova.com
+  description: Ansible role for create ECS task and service integrated with ALB
+  company: UnicaNova https://unicanova.com/
+  license: license (MIT)
+  min_ansible_version: 2.4

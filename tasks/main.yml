@@ -1,0 +1,52 @@
+---
+# tasks file for ansible-aws-ecs-task-service
+
+  - name: Create task definition
+    ecs_taskdefinition:
+      region: "{{ task_service.aws_ecs_region }}"
+      containers:
+      - name: "{{ task_service.aws_ecs_app_name }}"
+        cpu: "{{ task_service.aws_esc_cpu }}"
+        memory: "{{ task_service.aws_ecs_memory }}"
+        essential: true
+        image: "{{ task_service.aws_ecs_image }}"
+        portMappings:
+        - containerPort: "{{ task_service.aws_ecs_container_port }}"
+          hostPort: "{{ task_service.aws_esc_host_port }}"
+      state: present
+      family: "{{ task_service.aws_ecs_task_name }}"
+      revision: "{{ task_service.aws_ecs_revision_namber}}"
+    tags:
+      - task
+
+  - name: Get target group arn
+    elb_target_group_facts:
+      region: "{{ task_service.aws_ecs_region }}"
+      names:
+        - "{{ task_service.aws_ecs_tg_name }}"
+    register: tg
+
+  - name: Create service
+    ecs_service:
+      state: present
+      name: "{{ task_service.aws_ecs_service_name }}"
+      cluster: "{{ task_service.aws_ecs_cluster_name }}"
+      region: "{{ task_service.aws_ecs_region }}"
+      task_definition: "{{ task_service.aws_ecs_task_name }}"
+      desired_count: 1
+      role: "{{ task_service.aws_ecs_ecs_role }}"
+      load_balancers:
+        - targetGroupArn: "{{ tg.target_groups[0].target_group_arn }}"
+          containerName: "{{ task_service.aws_ecs_app_name }}"
+          containerPort: "{{ task_service.aws_ecs_container_port }}"
+    tags:
+      - service
+
+  - name: Run task
+    ecs_task:
+      operation: run
+      region: "{{ task_service.aws_ecs_region }}"
+      cluster: "{{ task_service.aws_ecs_cluster_name }}"
+      task_definition: "{{ task_service.aws_ecs_task_name }}"
+      started_by: "ansible"
+      count: 1
